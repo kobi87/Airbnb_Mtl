@@ -57,7 +57,6 @@ x = airbnb_en.iloc[:,[0,2,3,4,5,7,8]]
 
 # use log10 for the price for a good result
 y = airbnb_en['price'].values
-y = np.log10(y)
 
 #Getting Test and Training Set
 from sklearn.model_selection import train_test_split
