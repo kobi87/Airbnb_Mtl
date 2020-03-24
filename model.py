@@ -48,10 +48,10 @@ from sklearn.model_selection import train_test_split
 
 x_train = feature_sub_montreal_listing.iloc[0:10000]
 y_train = feature_sub_montreal_listing.iloc[0:10000]['price'].values
-y_train = np.log10(y_train)
+#y_train = np.log10(y_train)
 x_test = feature_sub_montreal_listing.iloc[10000:]
 y_test = feature_sub_montreal_listing.iloc[10000:]['price'].values
-y_test = np.log10(y_test)
+#y_test = np.log10(y_test)
 
 selected_feat = ['neighbourhood', 'room_type', 'availability_365']
 x_train=x_train[selected_feat]
