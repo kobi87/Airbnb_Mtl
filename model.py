@@ -25,52 +25,35 @@ for feature in categorical_features:
     labels_ordered=feature_sub_montreal_listing.groupby([feature])['price'].mean().sort_values().index
     labels_ordered={k:i for i,k in enumerate(labels_ordered,0)}
     feature_sub_montreal_listing[feature]=feature_sub_montreal_listing[feature].map(labels_ordered)
-    
-# Feature Scaling¶
-# MinMaxScaler (proposed 1)
-# we use minmaxscaler because we haven't a negative value, however we use normalised scaler (as a général standerscaler)
+
+# Normalise Dataframe (proposed 2)
+#num_features=['host_id','reviews_per_month','number_of_reviews','calculated_host_listings_count', 'minimum_nights', 'availability_365', 'price']
 
 feature_scale=[feature for feature in feature_sub_montreal_listing.columns if feature not in ['host_id','price']]
+data = pd.DataFrame()
+for feature in feature_scale:
+    data[feature] = (feature_sub_montreal_listing[feature] - feature_sub_montreal_listing[feature].mean())/ (feature_sub_montreal_listing[feature].std())
 
-from sklearn.preprocessing import MinMaxScaler
-scaler=MinMaxScaler()
-scaler.fit(feature_sub_montreal_listing[feature_scale])
-
-scaler.transform(feature_sub_montreal_listing[feature_scale])
-
-# transform the data, and add on the host_id and price variables
-feature_sub_montreal_listing = pd.concat([feature_sub_montreal_listing[['host_id', 'price']].reset_index(drop=True), pd.DataFrame(scaler.transform(feature_sub_montreal_listing[feature_scale]), columns=feature_scale)], axis=1)
+data.insert(loc=0, column='host_id', value=feature_sub_montreal_listing['host_id'])
+data.insert(loc=1, column='price', value=feature_sub_montreal_listing['price'])
+feature_sub_montreal_listing = data.copy()
 
 # Feature selection
 # Data filtering
 # Filter the dataset for prices between 0 and $120
 feature_sub_montreal_listing = feature_sub_montreal_listing.loc[(feature_sub_montreal_listing['price'] < 120)]
 
-## for feature slection
-
-from sklearn.linear_model import Lasso
-from sklearn.feature_selection import SelectFromModel
-
-#Defining the independent variables and dependent variables
-airbnb_en=feature_sub_montreal_listing.copy()
-x = airbnb_en.iloc[:,[0,2,3,4,5,7,8]]
-
-# use log10 for the price for a good result
-y = airbnb_en['price'].values
-y = np.log10(y)
-
-#Getting Test and Training Set
+## Split data and feature slection data (proposed 1)
 from sklearn.model_selection import train_test_split
-x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=.1,random_state=353)
 
-# to visualise al the columns in the dataframe
-pd.pandas.set_option('display.max_columns', None)
-feature_sel_model = SelectFromModel(Lasso(alpha=0.005, random_state=0)) # remember to set the seed, the random state in this function
-feature_sel_model.fit(x_train, y_train)
-feature_sel_model.get_support()
+x_train = feature_sub_montreal_listing.iloc[0:10000]
+y_train = feature_sub_montreal_listing.iloc[0:10000]['price'].values
+y_train = np.log10(y_train)
+x_test = feature_sub_montreal_listing.iloc[10000:]
+y_test = feature_sub_montreal_listing.iloc[10000:]['price'].values
+y_test = np.log10(y_test)
 
-# this is how we can make a list of the selected features
-selected_feat = x_train.columns[(feature_sel_model.get_support())]
+selected_feat = ['neighbourhood', 'room_type', 'availability_365']
 x_train=x_train[selected_feat]
 x_test =x_test[selected_feat] 
 
